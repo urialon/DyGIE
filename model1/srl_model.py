@@ -218,10 +218,14 @@ class SRLModel(object):
             )  # [num_sentences, max_num_ents, max_num_ents, num_labels]
           if config['ga_heads']:
               num_heads = config['ga_heads']
-              self.selfatt = SelfAttention(num_heads=num_heads, model_dim=1270, dropout_keep_prob=self.dropout)
-              entity_emb = self.selfatt.multi_head(
+              model_dim = 1270
+              self.selfatt = SelfAttention(num_heads=num_heads, model_dim=model_dim, dropout_keep_prob=self.dropout)
+              attended_entity_emb = self.selfatt.multi_head(
                   batched_inputs=entity_emb, 
                   valid_mask=tf.cast(tf.reshape(flat_entities_mask, [tf.shape(entity_emb)[0], tf.shape(entity_emb)[1]]), dtype=tf.float32))
+              entity_emb = tf.concat([entity_emb, attended_entity_emb], axis=-1)
+              entity_emb = tf.keras.layers.Dense(
+                  units=model_dim, activation=tf.nn.relu, use_bias=False, name='selfatt_final')(entity_emb)
           if config['rel_prop_emb']:
             entity_emb_size = util.shape(entity_emb, -1)
             flat_entity_emb = tf.reshape(entity_emb, [num_sentences * max_num_entities, entity_emb_size])
