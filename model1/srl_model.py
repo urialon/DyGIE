@@ -13,6 +13,7 @@ from lsgn_data import LSGNData
 
 from embedding_helper import get_embeddings
 from input_utils import *
+from self_attention import SelfAttention
 from model_utils import *
 
 
@@ -215,6 +216,12 @@ class SRLModel(object):
             rel_scores, entity_emb, flat_entities_mask = get_rel_scores(
               entity_emb, entity_scores, len(self.data.rel_labels), config, self.dropout, num_entities
             )  # [num_sentences, max_num_ents, max_num_ents, num_labels]
+          if config['ga_heads']:
+              num_heads = config['ga_heads']
+              self.selfatt = SelfAttention(num_heads=num_heads, model_dim=1270, dropout_keep_prob=self.dropout)
+              entity_emb = self.selfatt.multi_head(
+                  batched_inputs=entity_emb, 
+                  valid_mask=tf.cast(tf.reshape(flat_entities_mask, [tf.shape(entity_emb)[0], tf.shape(entity_emb)[1]]), dtype=tf.float32))
           if config['rel_prop_emb']:
             entity_emb_size = util.shape(entity_emb, -1)
             flat_entity_emb = tf.reshape(entity_emb, [num_sentences * max_num_entities, entity_emb_size])
