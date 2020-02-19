@@ -216,7 +216,7 @@ class SRLModel(object):
             rel_scores, entity_emb, flat_entities_mask = get_rel_scores(
               entity_emb, entity_scores, len(self.data.rel_labels), config, self.dropout, num_entities
             )  # [num_sentences, max_num_ents, max_num_ents, num_labels]
-          if config['ga_heads']:
+          if 'ga_heads' in config and config['ga_heads'] > 0:
               num_heads = config['ga_heads']
               model_dim = 1270
               self.selfatt = SelfAttention(num_heads=num_heads, model_dim=model_dim, dropout_keep_prob=self.dropout)
